@@ -1,0 +1,28 @@
+#!/bin/bash
+portarray=(`ss -tnlp |awk {'print $4'}|awk -F':' '{if ($NF~/^[0-9]*$/) print $NF}'|sort|uniq`)
+length=${#portarray[@]}
+
+function zabbix_json(){
+  printf "{\n"
+  printf '\t'"\"data\":["
+  for ((i=0;i<$length;i++))
+  do
+      printf '\n\t\t{'
+      printf "\"{#TCP_PORT}\":\"${portarray[$i]}\","
+      printf "\"{#TCP_NAME}\":\"` sudo -u root netstat -ntlp |grep -w ${portarray[$i]} | awk '{print $NF}' |awk -F '/' '{ print $NF }'|uniq`\"}"
+        if [ $i -lt $[$length-1] ];then
+          printf ','
+      fi
+  done
+  printf "\n\t]\n"
+  printf "}\n"
+}
+
+function check(){
+  #ss -tnlp |grep 'users' |awk -F ':' "/:$1/ {print \$NF}" |cut -d',' -f1 |sed 's@[(,"]@@g' |uniq
+  ss -tnlp |grep 'users' |awk -F ':' "/:$1/ {print \$NF}" |grep -oE '\".*\"' |sort  |uniq |head -n1 |sed 's/"//g' |awk -F ',' '{print $1}'
+}
+
+[[ $1 = check ]] \
+  && $* \
+  || zabbix_json
