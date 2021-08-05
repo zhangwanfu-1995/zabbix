@@ -1,5 +1,0 @@
-UserParameter=tcpprotlisten,/etc/zabbix/discovery_tcpport.sh "$1"
-
-
-#/etc/sudoers
-#zabbix ALL=(root) NOPASSWD:/bin/netstats
